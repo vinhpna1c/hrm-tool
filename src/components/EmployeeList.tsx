@@ -1,114 +1,79 @@
-import { Button, Table, TableContainer, Tbody, Td, Th, Thead, Tr } from "@chakra-ui/react";
+import { Button, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Table, TableContainer, Tbody, Th, Thead, Tr, useDisclosure, } from "@chakra-ui/react";
 
 import { useEffect, useState } from "react";
 
 import { getAllCheckInByDate, getAllEmployee } from "../handler";
 import Employee from "../models/Employee";
 import TimeKeeping from "../models/TimeKeeping";
+import TimeKeepingRow from "./TimeKeepingRow";
+
 
 function EmployeeList() {
-
+    const [username, setUsername] = useState("")
+    const [password, setPassword] = useState("")
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [timeKeepings, setTimeKeepings] = useState<TimeKeeping[]>([]);
-    const [dataMap, setDataMap] = useState(new Map<String, {
-        employee?: Employee,
-        timeKeeping?: TimeKeeping,
-    }>());
+
     useEffect(() => {
-        getAllEmployee().then((employees) => {
-            setEmployees(employees);
-        });
-        getAllCheckInByDate().then((timeKeepings) => {
-            setTimeKeepings(timeKeepings);
-        })
+        fetchCheckInData();
+        fetchEmployeeData();
     }, [])
-    useEffect(() => {
-        console.log("Create new Map");
-        console.log("Employee list: " + employees.length);
-        console.log("TimeKeping list: " + timeKeepings.length);
-        const newDataMap = new Map<String, {
-            employee?: Employee,
-            timeKeeping?: TimeKeeping,
-        }>();
-        for (const employee of employees) {
-            if (employee.Code) {
-                newDataMap.set(
-                    employee.Code ?? '',
-                    {
-                        ...newDataMap.get(employee.Code ?? ''),
-                        employee,
-                    });
-            }
-        };
-        for (const timeKeeping of timeKeepings) {
-            if (timeKeeping.Employee) {
-                newDataMap.set(
-                    timeKeeping.Employee ?? '',
-                    {
-                        ...newDataMap.get(timeKeeping.Employee ?? ''),
-                        timeKeeping
-                    })
-            }
-        }
-        console.log("New data map: " + JSON.stringify(newDataMap));
-        setDataMap(newDataMap);
 
-    }, [employees, timeKeepings]);
-    const keys = [];
-    for (const key in dataMap.keys) {
-        keys.push(key);
+
+    const fetchEmployeeData = async () => {
+        const employeeList = await getAllEmployee();
+        setEmployees(employeeList);
     }
-    return <div >
-        <TableContainer>
-            <Table size='lg'>
-                <Thead>
-                    <Tr>
-                        <Th isNumeric>TH</Th>
-                        <Th>Employee</Th>
-                        <Th>Check In Time</Th>
-                        <Th>Check Out Time</Th>
-                        <Th className="flex justify-center">Actions</Th>
 
-                    </Tr>
-                </Thead>
-                <Tbody>
-                    {keys.map((key, index) => {
-                        const data = dataMap.get(key)!;
-                        return <TimeKeepingRow key={key} th={index} employee={data.employee!} timeKeeping={data.timeKeeping} />
-                    })}
-                    <Tr>
-                        <Td isNumeric>1</Td>
-                        <Td>millimetres (mm)</Td>
-                        <Td isNumeric>25.4</Td>
-                        <Td >millimetres (mm)</Td>
-                        <Td className="flex justify-center space-x-4"><Button>Check In</Button><Button>Check Out</Button></Td>
-                    </Tr>
+    const fetchCheckInData = async () => {
+        const timeKeepingList = await getAllCheckInByDate();
+        setTimeKeepings(timeKeepingList);
+    }
 
-                </Tbody>
-
-            </Table>
-        </TableContainer>
-    </div>
-
-}
-
-type TimeKeepingRowProps = {
-    th: number,
-    employee: Employee,
-    timeKeeping?: TimeKeeping,
-};
-
-function TimeKeepingRow(props: TimeKeepingRowProps) {
-    const { employee, timeKeeping, th } = props;
     return (
-        <Tr >
-            <Td isNumeric>{th}</Td>
-            <Td>{employee.Description}</Td>
-            <Td isNumeric>25.4</Td>
-            <Td >millimetres (mm)</Td>
-            <Td className="flex justify-center space-x-4"><Button>Check In</Button><Button>Check Out</Button></Td>
-        </Tr>
-    )
+        <div >
+
+            <div className="flex flex-col p-4 mb-5">
+                <span className="font-semibold">Username: </span>
+                <Input className="mb-2" placeholder="Input user name..." onChange={(value) => setUsername(value.target.value)} />
+                <span className="font-semibold">Password: </span>
+                <Input className="mb-2" placeholder="" type="password" onChange={(value) => setPassword(value.target.value)} />
+                <span className="italic text-xs">
+                    P/s: Input "username" and "password" before using
+                </span>
+            </div>
+
+            <TableContainer>
+                <Table size='lg'>
+                    <Thead>
+                        <Tr>
+                            <Th isNumeric>TH</Th>
+                            <Th>Employee</Th>
+                            <Th>Check In Time</Th>
+                            <Th>Check Out Time</Th>
+                            <Th className="flex justify-center">Actions</Th>
+
+                        </Tr>
+                    </Thead>
+                    <Tbody>
+                        {employees.map((e, index) => {
+
+                            const timeKeeping = timeKeepings.find((t) => t.Employee == e.Code);
+
+                            return <TimeKeepingRow auth={{ username, password }} key={index} th={index + 1} employee={e} timeKeeping={timeKeeping} callback={() => fetchCheckInData()} />
+                        })}
+
+
+                    </Tbody>
+
+                </Table>
+            </TableContainer>
+
+
+
+        </div >)
+
 }
+
 
 export default EmployeeList;

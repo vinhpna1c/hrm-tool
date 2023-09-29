@@ -4,13 +4,14 @@ import Employee from "../models/Employee";
 import API from "./api"
 import TimeKeeping from "../models/TimeKeeping";
 
+const api = API.getInstance();
+
 const basicAdminAuth = {
     username: env.ADMIN_USERNAME,
     password: env.ADMIN_PASSWORD,
 };
 
 const getAllEmployee = async () => {
-    const api = API.getInstance();
     const res: Employee[] = [];
     const respond = await api.get('/V1/AllEmployee', { auth: basicAdminAuth });
     if (respond.status === 200) {
@@ -23,7 +24,6 @@ const getAllEmployee = async () => {
 const getAllCheckInByDate = async (params?: {
     date?: Date,
 }) => {
-    const api = API.getInstance();
     const date: Date = params?.date ?? new Date();
     const OnDate = moment(date).format('YYYYMMDD')
 
@@ -36,7 +36,24 @@ const getAllCheckInByDate = async (params?: {
     return res;
 }
 
+export type TkAuth = {
+    username: string;
+    password: string;
+}
+
+const checkIn = async (auth: TkAuth) => {
+    const respond = await api.post('/V1/EmployeeCheckIn', {}, { auth: auth });
+    return respond.status === 200;
+}
+
+const checkOut = async (data: TkAuth, body: { Number: string }) => {
+    const respond = await api.post('/V1/EmployeeCheckOut', JSON.stringify({ Number: body.Number }), { auth: data });
+    return respond.status === 200;
+}
+
 export {
     getAllEmployee,
-    getAllCheckInByDate
+    getAllCheckInByDate,
+    checkIn,
+    checkOut,
 }
