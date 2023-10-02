@@ -14,6 +14,10 @@ function EmployeeList() {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [timeKeepings, setTimeKeepings] = useState<TimeKeeping[]>([]);
 
+    let _username = "";
+    let _password = "";
+
+
     useEffect(() => {
         fetchCheckInData();
         fetchEmployeeData();
@@ -30,16 +34,29 @@ function EmployeeList() {
         setTimeKeepings(timeKeepingList);
     }
 
+    const onCredetialPress = () => {
+        setUsername(_username);
+        setPassword(_password);
+    }
+
     return (
         <div >
 
             <div className="flex flex-col p-4 mb-5">
                 <span className="font-semibold">Username: </span>
-                <Input className="mb-2" placeholder="Input user name..." onChange={(value) => setUsername(value.target.value)} />
+                <Input className="mb-2" placeholder="Input user name..." onChange={(value) => _username = value.target.value} />
                 <span className="font-semibold">Password: </span>
-                <Input className="mb-2" placeholder="" type="password" onChange={(value) => setPassword(value.target.value)} />
+                <Input className="mb-2" placeholder="" type="password" onChange={(value) => _password = value.target.value} />
+                <Button colorScheme="whatsapp" onClick={onCredetialPress}>Set Credentials</Button>
+
+                {(username.length > 0 && password.length > 0) && <div className="flex justify-start items-center">
+                    <span className="font-semibold mr-1">Username: </span>
+                    <p className="italic mr-3">{username}</p>
+                    <span className="font-semibold mr-1">Password: </span>
+                    <p className="italic">{password}</p>
+                </div>}
                 <span className="italic text-xs">
-                    P/s: Input "username" and "password" before using
+                    P/s: Input "username" and "password" anh click on set up to use
                 </span>
             </div>
 
